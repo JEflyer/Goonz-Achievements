@@ -1,10 +1,15 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
-//Import ERC721Enumerable
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+//Import ERC1155 base contract
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-contract Acheivements is ERC721Enumerable {
+//Import ERC1155 extensions
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+
+
+contract Acheivements is ERC1155, ERC1155Burnable, ERC1155Supply {
 
     event NewAdmin(address _new);    
     event NewAchievement(string achievement);
@@ -34,7 +39,7 @@ contract Acheivements is ERC721Enumerable {
     uint256 private mintCounter;
 
 
-    constructor(string memory name, string memory symbol, string[] memory _strings, string memory _base,address _permGiver) ERC721(name,symbol){
+    constructor(string[] memory _strings, string memory _base,address _permGiver) ERC1155("https://gateway.mypinata.cloud/CID_HERE/{id}.JSON"){
         //Asign the caller as the admin
         admin = _msgSender();
 
@@ -144,56 +149,54 @@ contract Acheivements is ERC721Enumerable {
         //Assign the achievement
         isAchieved[caller][acheivementString] = true;
 
-        //Pull the new token ID into memory
-        uint256 token = mintCounter + 1;
-
-        //Assign the ending of the tokenURI for the new token
-        URIs[token] = acheivementString;
-
         //Mint token to caller
-        _mint(caller, token);
-
-        //Set the new counter in storage
-        mintCounter = token;
+        _mint(caller, acheivementID, 1, "");
 
         //Emit event
         emit Unlocked(caller, acheivementString);
     }
 
-    function tokenURI(uint256 _tokenId)
-        public
-        view
-        virtual
-        override
-        returns (string memory uri)
-    {
-        require(_exists(_tokenId));
+    // function tokenURI(uint256 _tokenId)
+    //     public
+    //     view
+    //     virtual
+    //     override
+    //     returns (string memory uri)
+    // {
+    //     require(exists(_tokenId));
 
-        uri = string(
-            abi.encodePacked(
-                baseURI,
-                URIs[_tokenId],
-                ".JSON"
-            )
-        );
-    }
+    //     uri = string(
+    //         abi.encodePacked(
+    //             baseURI,
+    //             URIs[_tokenId],
+    //             ".JSON"
+    //         )
+    //     );
+    // }
 
-    //returns an array of tokens held by a wallet
-    function walletOfOwner(address _wallet) public view  returns(uint16[] memory ids){
-        uint16 ownerTokenCount = uint16(balanceOf(_wallet));
-        ids = new uint16[](ownerTokenCount);
-        for(uint16 i = 0; i< ownerTokenCount; i++){
-            ids[i] = uint16(tokenOfOwnerByIndex(_wallet, i));
-        }
-    }
+    // //returns an array of tokens held by a wallet
+    // function walletOfOwner(address _wallet) public view  returns(uint16[] memory ids){
+    //     uint16 ownerTokenCount = uint16(balanceOf(_wallet));
+    //     ids = new uint16[](ownerTokenCount);
+    //     for(uint16 i = 0; i< ownerTokenCount; i++){
+    //         ids[i] = uint16(tokenOfOwnerByIndex(_wallet, i));
+    //     }
+    // }
 
     function getAchievement(uint256 tokenId) external view returns(string memory){
-        require(_exists(tokenId),"ERR:IT");//IT => Invalid Token
-        return URIs[tokenId];
+        return acheivementStrings[tokenId];
     }
 
     function getAchievementStrings() external view returns(string[] memory){
         return acheivementStrings;
+    }
+
+    // The following functions are overrides required by Solidity.
+    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+        internal
+        override(ERC1155, ERC1155Supply)
+    {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
 }

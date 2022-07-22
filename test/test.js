@@ -41,8 +41,6 @@ describe("Achievements", function() {
         const achievements = await ethers.getContractFactory("Acheivements", deployer)
 
         const Acheivements = await achievements.deploy(
-            "Name",
-            "Sym",
             _strings,
             "Base",
             addr1.address
@@ -91,7 +89,7 @@ describe("Achievements", function() {
                 sig.s
             )
 
-            expect(await Acheivements.getAchievement(1)).to.be.equal(_strings[0])
+            expect(await Acheivements.getAchievement(0)).to.be.equal(_strings[0])
         });
 
         it("Should not allow a user to get an achievement if they don't have permission", async function() {
