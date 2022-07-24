@@ -38,6 +38,9 @@ contract Acheivements is ERC1155, ERC1155Burnable, ERC1155Supply {
     //Stores the current highest token minted
     uint256 private mintCounter;
 
+    //Stores whether a token has been transferred
+    mapping(uint256 => bool) private minted;
+
 
     constructor(string[] memory _strings, string memory _base,address _permGiver) ERC1155("https://gateway.mypinata.cloud/CID_HERE/{id}.JSON"){
         //Asign the caller as the admin
@@ -197,6 +200,39 @@ contract Acheivements is ERC1155, ERC1155Burnable, ERC1155Supply {
         override(ERC1155, ERC1155Supply)
     {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public virtual override {
+        require(from == address(0),"ERR:NA");//NA => Not Allowed
+        require(
+            from == _msgSender() || isApprovedForAll(from, _msgSender()),
+            "ERC1155: caller is not token owner nor approved"
+        );
+        _safeTransferFrom(from, to, id, amount, data);
+    }
+
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public virtual override {
+        require(from == address(0),"ERR:NA");//NA => Not Allowed
+        require(
+            from == _msgSender() || isApprovedForAll(from, _msgSender()),
+            "ERC1155: caller is not token owner nor approved"
+        );
+        _safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
 }

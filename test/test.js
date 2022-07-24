@@ -163,5 +163,79 @@ describe("Achievements", function() {
                 sig.s
             ))
         });
+
+        it("Should not allow a user to transfer their achievement NFT once minted", async() => {
+            const { _strings, deployer, addr1, addr2, Acheivements } = await loadFixture(setup);
+
+            let payload = ethers.utils.defaultAbiCoder.encode(["string", "address"], [_strings[0], addr2.address]);
+
+            let payloadHash = ethers.utils.keccak256(payload);
+
+            let signature = await addr1.signMessage(ethers.utils.arrayify(payloadHash));
+            let sig = ethers.utils.splitSignature(signature);
+
+            await Acheivements.connect(addr2).unlockAcheivement(
+                0,
+                payloadHash,
+                sig.v,
+                sig.r,
+                sig.s
+            )
+
+            // function safeTransferFrom(
+            //     address from,
+            //     address to,
+            //     uint256 id,
+            //     uint256 amount,
+            //     bytes memory data
+
+            expect(Acheivements.connect(addr2).safeTransferFrom(addr2.address, addr1.address, 0, 1, "")).to.be.revertedWith("ERR:NA")
+        })
+
+        it("Should not allow a user to batch transfer their achievement NFT once minted", async() => {
+            const { _strings, deployer, addr1, addr2, Acheivements } = await loadFixture(setup);
+
+            let payload = ethers.utils.defaultAbiCoder.encode(["string", "address"], [_strings[0], addr2.address]);
+
+            let payloadHash = ethers.utils.keccak256(payload);
+
+            let signature = await addr1.signMessage(ethers.utils.arrayify(payloadHash));
+            let sig = ethers.utils.splitSignature(signature);
+
+            await Acheivements.connect(addr2).unlockAcheivement(
+                0,
+                payloadHash,
+                sig.v,
+                sig.r,
+                sig.s
+            )
+
+            payload = ethers.utils.defaultAbiCoder.encode(["string", "address"], [_strings[1], addr2.address]);
+
+            payloadHash = ethers.utils.keccak256(payload);
+
+            signature = await addr1.signMessage(ethers.utils.arrayify(payloadHash));
+            sig = ethers.utils.splitSignature(signature);
+
+            await Acheivements.connect(addr2).unlockAcheivement(
+                1,
+                payloadHash,
+                sig.v,
+                sig.r,
+                sig.s
+            )
+
+            // function safeTransferFrom(
+            //     address from,
+            //     address to,
+            //     uint256 id,
+            //     uint256 amount,
+            //     bytes memory data
+
+            let ids = [0, 1]
+            let amounts = [1, 1]
+
+            expect(Acheivements.connect(addr2).safeBatchTransferFrom(addr2.address, addr1.address, ids, amounts, "0x")).to.be.revertedWith("ERR:NA")
+        })
     });
 });
